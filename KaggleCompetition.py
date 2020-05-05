@@ -175,14 +175,12 @@ dataset.head()
 
 # Drop Id, Keyword, Location
 dataset = dataset.drop(labels=['id', 'keyword','location'], axis=1)
-dataset.head()
-
 
 # Drop first row
-dataset = dataset.drop(index=0)
+#dataset = dataset.drop(index=0)
 # Clean data
 nlp = spacy.load('en_core_web_sm',disable=['parser', 'ner'])
-dataset['text_cleaned'] = dataset['text'].apply(lambda s : clean(s,nlp))
+dataset['text_cleaned'] = dataset['text'].apply(lambda s : clean(s,nlp,0))
 
 
 dataset['text_cleaned'] = dataset['text_cleaned'].drop_duplicates()
@@ -245,7 +243,20 @@ model_class, tokenizer_class, pretrained_weights = (ppb.DistilBertModel, ppb.Dis
 
 # Load pretrained model/tokenizer
 tokenizer = tokenizer_class.from_pretrained(pretrained_weights)
-model = model_class.from_pretrained(pretrained_weights)
+config = ppb.BertConfig.from_json_file('distilbert-base-uncased-config.json')
+model = model_class(config)
+state_dict = torch.load('distilbert-base-uncased-pytorch_model.bin')
+#print(type(state_dict))
+l = len(state_dict)
+for i in range(l):
+   tmp = state_dict.popitem(last=False)
+   if tmp[0] not in [ "vocab_transform.weight", "vocab_transform.bias", "vocab_layer_norm.weight", "vocab_layer_norm.bias", "vocab_projector.weight", "vocab_projector.bias"]:
+      state_dict[tmp[0].replace('distilbert.','')] = tmp[1]
+#for key, val in state_dict.iteritems():
+#   state_dict[key.replace('distilbert.','')] = val
+#   del state_dict[key]
+
+model.load_state_dict(state_dict)
 
 sample_tokenized = random_sample['text_cleaned'].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
 #sample_tokenized2 = random_sample2['text_cleaned'].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
