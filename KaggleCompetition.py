@@ -119,14 +119,14 @@ class Shallow_Network(nn.Module):
     def __init__(self):
         super(Shallow_Network,self).__init__()
         self.fc1 = nn.Linear(768,1000)
-        self.out = nn.Linear(1000,2)
+        self.out = nn.Linear(1000,1)
     def forward(self,input):
         # Take input, feed through fc1 layer,
         # then apply activation function to it
-        x = F.sigmoid(self.fc1(input))
-        # Take output of sigmoid, input into out layer,
+        x = F.relu(self.fc1(input))
+        # Take output of relu, input into out layer,
         # and apply log_softmax function
-        return (F.log_softmax(self.out(x),dim=1))
+        return (F.sigmoid(self.out(x)))
 
 
 class Medium_Network(nn.Module):
@@ -197,203 +197,213 @@ def get_embeddings_from_sample(sample, model):
     features = last_hidden_states[0][:,0,:].numpy()
     return features, mask
 
-    # For DistilBERT:
-    model_class, tokenizer_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+##########
+## MAIN ##
+##########
 
-    # Load pretrained model/tokenizer
-    tokenizer = tokenizer_class.from_pretrained(pretrained_weights)
-    config = ppb.BertConfig.from_json_file('distilbert-base-uncased-config.json')
-    model = model_class(config)
-    state_dict = torch.load('distilbert-base-uncased-pytorch_model.bin')
-    #print(type(state_dict))
-    l = len(state_dict)
-    for i in range(l):
-       tmp = state_dict.popitem(last=False)
-       if tmp[0] not in [ "vocab_transform.weight", "vocab_transform.bias", "vocab_layer_norm.weight", "vocab_layer_norm.bias", "vocab_projector.weight", "vocab_projector.bias"]:
-          state_dict[tmp[0].replace('distilbert.','')] = tmp[1]
-    #for key, val in state_dict.iteritems():
-    #   state_dict[key.replace('distilbert.','')] = val
-    #   del state_dict[key]
+# Prepare DistilBERT:
+model_class, tokenizer_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
 
-    model.load_state_dict(state_dict)
+# Load pretrained model/tokenizer
+tokenizer = tokenizer_class.from_pretrained(pretrained_weights)
+config = ppb.BertConfig.from_json_file('distilbert-base-uncased-config.json')
+model = model_class(config)
+state_dict = torch.load('distilbert-base-uncased-pytorch_model.bin')
+#print(type(state_dict))
+
+# The keys in the locally loaded state_dict and the expected keys by the model differ by the prefix 'distilbert.'. So we need to remove it.
+l = len(state_dict)
+for i in range(l):
+   tmp = state_dict.popitem(last=False)
+   if tmp[0] not in [ "vocab_transform.weight", "vocab_transform.bias", "vocab_layer_norm.weight", "vocab_layer_norm.bias", "vocab_projector.weight", "vocab_projector.bias"]:
+      state_dict[tmp[0].replace('distilbert.','')] = tmp[1]
+#for key, val in state_dict.iteritems():
+#   state_dict[key.replace('distilbert.','')] = val
+#   del state_dict[key]
+
+model.load_state_dict(state_dict)
 
 f = open('kaggle_results.csv', 'w+')
-f.write('Cleaning Index, Network Type, Test Accuracy, Min. Epoch, Min. Validation Loss, Runtime')
+f.write('Cleaning Index, Network Type, Test Accuracy, Min. Epoch, Min. Validation Loss, Runtime\n')
 
 netType = 'shallow'
 
+### Loop over cleaning parameter and output quality values of run
 # import nltk
-for i in range(8):
-    # Import and prepare dataset
-    dataset = pd.read_csv('./data/Kaggle/train.csv',delimiter=',',names=['id','keyword','location', 'text','target'])
-    dataset = dataset.drop(0)
-    #dataset.head()
+for netType in ['shallow', 'medium']:
+    for i in range(8):
+        startTime = time.time()
+        # Import and prepare dataset
+        dataset = pd.read_csv('./data/Kaggle/train.csv',delimiter=',',names=['id','keyword','location', 'text','target'])
+        dataset = dataset.drop(0)
+        #dataset.head()
 
-    # Drop Id, Keyword, Location
-    dataset = dataset.drop(labels=['id', 'keyword','location'], axis=1)
+        # Drop Id, Keyword, Location
+        dataset = dataset.drop(labels=['id', 'keyword','location'], axis=1)
 
-    # Drop first row
-    #dataset = dataset.drop(index=0)
-    # Clean data
-    nlp = spacy.load('en_core_web_sm',disable=['parser', 'ner'])
-    dataset['text_cleaned'] = dataset['text'].apply(lambda s : clean(s,nlp,i))
-
-
-    dataset['text_cleaned'] = dataset['text_cleaned'].drop_duplicates()
-    dataset['text_cleaned'].replace('', np.nan, inplace=True)
-    dataset.dropna(subset=['text_cleaned'], inplace=True)
-
-    # clean_dataset = pd.read_csv('dataset_cleaned2.csv',header=None)
-
-    # clean_dataset['target'] = dataset['target'].loc[clean_dataset[0]].tolist()
-
-    # dataset = clean_dataset
-    # dataset.columns = ['ID','text_cleaned','target']
-
-    sample_size = 4000
-    random_sample = dataset.sample(n=sample_size, random_state=1)
-    random_sample.shape
-
-    val_set = dataset.loc[dataset.index.difference(random_sample.index)]
-    #val_set.shape
+        # Drop first row
+        #dataset = dataset.drop(index=0)
+        # Clean data
+        nlp = spacy.load('en_core_web_sm',disable=['parser', 'ner'])
+        dataset['text_cleaned'] = dataset['text'].apply(lambda s : clean(s,nlp,i))
 
 
-    val_sample_size = 1500
-    val_random_sample = val_set.sample(n=val_sample_size, random_state=1)
-    #val_random_sample.shape
-    test_set = val_set.loc[val_set.index.difference(val_random_sample.index)]
+        dataset['text_cleaned'] = dataset['text_cleaned'].drop_duplicates()
+        dataset['text_cleaned'].replace('', np.nan, inplace=True)
+        dataset.dropna(subset=['text_cleaned'], inplace=True)
 
-    # Tokenize data
-    sample_tokenized = random_sample['text_cleaned'].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
-    #sample_tokenized2 = random_sample2['text_cleaned'].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
-    val_random_sample_tokenized = val_random_sample['text_cleaned'].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
-    #test_tokenized = test_set['text_cleaned'].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
+        # clean_dataset = pd.read_csv('dataset_cleaned2.csv',header=None)
 
+        # clean_dataset['target'] = dataset['target'].loc[clean_dataset[0]].tolist()
 
-    sample_padded, sample_len = pad_token_list(sample_tokenized.values)
-    val_padded, val_len = pad_token_list(val_random_sample_tokenized.values)
-    #sample_padded2, sample_len2 = pad_token_list(sample_tokenized2.values)
-    #test_padded, test_len = pad_token_list(test_tokenized.values)
+        # dataset = clean_dataset
+        # dataset.columns = ['ID','text_cleaned','target']
 
+        sample_size = 4000
+        random_sample = dataset.sample(n=sample_size, random_state=1)
+        random_sample.shape
 
-    sample_features, mask = get_embeddings_from_sample(sample_padded, model)
-    val_features, mask = get_embeddings_from_sample(val_padded, model)
+        val_set = dataset.loc[dataset.index.difference(random_sample.index)]
+        #val_set.shape
 
 
-    # Create cuda device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        val_sample_size = 1500
+        val_random_sample = val_set.sample(n=val_sample_size, random_state=1)
+        #val_random_sample.shape
+        test_set = val_set.loc[val_set.index.difference(val_random_sample.index)]
 
-    train_features_tensor = torch.tensor(np.asarray(sample_features))
-    train_features_tensor = train_features_tensor.to(device)
-    train_labels_tensor =  torch.FloatTensor(np.asarray(random_sample['target']).astype(np.float))
-    train_labels_tensor = train_labels_tensor.to(device)
-
-    val_features_tensor = torch.tensor(np.asarray(val_features))
-    val_features_tensor = val_features_tensor.to(device)
-    val_labels_tensor =  torch.FloatTensor(np.asarray(val_random_sample['target']).astype(np.float))
-    val_labels_tensor = val_labels_tensor.to(device)
+        # Tokenize data
+        sample_tokenized = random_sample['text_cleaned'].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
+        #sample_tokenized2 = random_sample2['text_cleaned'].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
+        val_random_sample_tokenized = val_random_sample['text_cleaned'].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
+        #test_tokenized = test_set['text_cleaned'].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
 
 
+        sample_padded, sample_len = pad_token_list(sample_tokenized.values)
+        val_padded, val_len = pad_token_list(val_random_sample_tokenized.values)
+        #sample_padded2, sample_len2 = pad_token_list(sample_tokenized2.values)
+        #test_padded, test_len = pad_token_list(test_tokenized.values)
 
-    # Create neural network object
-    if netType == 'shallow':
-        net = Shallow_Network()
-    else:
-        net = Medium_Network()
-    net = net.to(device)
 
-    #Create an stochastic gradient descent optimizer
-    adam = optim.Adam(net.parameters(), lr=0.001)
-    #loss_func = nn.NLLLoss()
-    loss_func = nn.BCELoss()
-    loss_func = loss_func.to(device)
+        sample_features, mask = get_embeddings_from_sample(sample_padded, model)
+        val_features, mask = get_embeddings_from_sample(val_padded, model)
 
-    print('Train_features_tensor: {}'.format(train_features_tensor.shape))
-    probs = net(train_features_tensor)
-    print('Probs: {}'.format(probs.shape))
-    #sys.exit()
-    
-    
-    # Train network
-    cnt = 0
-    average_losses = []
-    average_val_losses = []
-    acc = []
-    cur_loss = []
-    min_validation = 10000.0
-    min_val_epoch = 0
-    for epoch in range(400):
-        net.train()
-        #zero the gradient
-        adam.zero_grad()
-        #Get output of network
+
+        # Create cuda device
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        train_features_tensor = torch.tensor(np.asarray(sample_features))
+        train_features_tensor = train_features_tensor.to(device)
+        train_labels_tensor =  torch.FloatTensor(np.asarray(random_sample['target']).astype(np.float))
+        train_labels_tensor = train_labels_tensor.to(device)
+
+        val_features_tensor = torch.tensor(np.asarray(val_features))
+        val_features_tensor = val_features_tensor.to(device)
+        val_labels_tensor =  torch.FloatTensor(np.asarray(val_random_sample['target']).astype(np.float))
+        val_labels_tensor = val_labels_tensor.to(device)
+
+
+
+        # Create neural network object
+        if netType == 'shallow':
+            net = Shallow_Network()
+        else:
+            net = Medium_Network()
+        net = net.to(device)
+
+        #Create an stochastic gradient descent optimizer
+        adam = optim.Adam(net.parameters(), lr=0.001)
+        #loss_func = nn.NLLLoss()
+        loss_func = nn.BCELoss()
+        loss_func = loss_func.to(device)
+
+        print('Train_features_tensor: {}'.format(train_features_tensor.shape))
+        print('Train_labels_tensor: {}'.format(train_labels_tensor.shape))
         probs = net(train_features_tensor)
-        #compute loss
-        loss = loss_func(probs,train_labels_tensor)
-        #compute the backward gradient and move network in that direction
-        loss.backward()
-        adam.step()
-        #gather loss
-        cur_loss.append(loss.detach().cpu().numpy())
-        print("epoch ",epoch)
-        print("training loss: ", np.mean(cur_loss))
+        print('Probs: {}'.format(probs.shape))
+        #sys.exit()
+        
+        
+        # Train network
+        cnt = 0
+        average_losses = []
+        average_val_losses = []
+        acc = []
+        cur_loss = []
+        min_validation = 10000.0
+        min_val_epoch = 0
+        for epoch in range(400):
+            net.train()
+            #zero the gradient
+            adam.zero_grad()
+            #Get output of network
+            probs = net(train_features_tensor)
+            #compute loss
+            loss = loss_func(probs,train_labels_tensor)
+            #compute the backward gradient and move network in that direction
+            loss.backward()
+            adam.step()
+            #gather loss
+            cur_loss.append(loss.detach().cpu().numpy())
+            print("epoch ",epoch)
+            print("training loss: ", np.mean(cur_loss))
+            net.eval()
+            probs_val = net(val_features_tensor)
+            loss_val = loss_func(probs_val,val_labels_tensor)
+            print("validation loss: ", np.mean(loss_val.detach().cpu().numpy()))
+            print("validation accuracy: ", accuracy(net,val_features_tensor,val_labels_tensor))
+            #Save model if validation is min
+            if min_validation > np.mean(loss_val.detach().cpu().numpy()):
+                min_validation = np.mean(loss_val.detach().cpu().numpy())
+                min_val_epoch = epoch
+                torch.save(net.state_dict(), './net_parameters_kaggle.pth')
+
+
+        #torch.t(torch.round(probs[0:5]))
+
+
+        #val_labels_tensor[0:5]
+
+
+        #torch.sum(torch.abs(torch.t(torch.round(probs[0:5])) - val_labels_tensor[0:5]))
+
+        #min_val_epoch
+
+        # Reload optially validated weights
+        net = Shallow_Network()
+        checkpoint = torch.load('./net_parameters_kaggle.pth')
+        net.load_state_dict(checkpoint)
+        net = net.to(device)
         net.eval()
-        probs_val = net(val_features_tensor)
-        loss_val = loss_func(probs_val,val_labels_tensor)
-        print("validation loss: ", np.mean(loss_val.detach().cpu().numpy()))
-        print("validation accuracy: ", accuracy(net,val_features_tensor,val_labels_tensor))
-        #Save model if validation is min
-        if min_validation > np.mean(loss_val.detach().cpu().numpy()):
-            min_validation = np.mean(loss_val.detach().cpu().numpy())
-            min_val_epoch = epoch
-            torch.save(net.state_dict(), './net_parameters_kaggle.pth')
 
 
-    #torch.t(torch.round(probs[0:5]))
+        #probs_val = net(val_features_tensor)
+        #loss_val = loss_func(probs_val,val_labels_tensor)
+        #print("validation loss: ", np.mean(loss_val.detach().cpu().numpy()))
 
 
-    #val_labels_tensor[0:5]
+        #print(accuracy(net,val_features_tensor,val_labels_tensor))
 
 
-    #torch.sum(torch.abs(torch.t(torch.round(probs[0:5])) - val_labels_tensor[0:5]))
+        test_set = val_set.loc[val_set.index.difference(val_random_sample.index)]
+        test_random_sample_tokenized = test_set['text_cleaned'].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
+        test_padded, test_len = pad_token_list(test_random_sample_tokenized.values)
+        test_features, mask = get_embeddings_from_sample(test_padded, model)
+        test_features_tensor = torch.tensor(np.asarray(test_features))
+        test_features_tensor = test_features_tensor.to(device)
+        test_labels_tensor =  torch.tensor(np.asarray(test_set['target']).astype(np.int))
+        test_labels_tensor = test_labels_tensor.to(device)
 
-    #min_val_epoch
+        testAcc = accuracy(net,test_features_tensor,test_labels_tensor)
+        print(testAcc)
 
-    # Reload optially validated weights
-    net = Shallow_Network()
-    checkpoint = torch.load('./net_parameters_kaggle.pth')
-    net.load_state_dict(checkpoint)
-    net = net.to(device)
-    net.eval()
+        runTime = time.time() - startTime
 
+        #dataset.shape
 
-    #probs_val = net(val_features_tensor)
-    #loss_val = loss_func(probs_val,val_labels_tensor)
-    #print("validation loss: ", np.mean(loss_val.detach().cpu().numpy()))
+        #dataset = dataset.drop_duplicates(subset='text_cleaned')
 
-
-    #print(accuracy(net,val_features_tensor,val_labels_tensor))
-
-
-    test_set = val_set.loc[val_set.index.difference(val_random_sample.index)]
-    test_random_sample_tokenized = test_set['text_cleaned'].apply((lambda x: tokenizer.encode(x, add_special_tokens=True)))
-    test_padded, test_len = pad_token_list(test_random_sample_tokenized.values)
-    test_features, mask = get_embeddings_from_sample(test_padded, model)
-    test_features_tensor = torch.tensor(np.asarray(test_features))
-    test_features_tensor = test_features_tensor.to(device)
-    test_labels_tensor =  torch.tensor(np.asarray(test_set['target']).astype(np.int))
-    test_labels_tensor = test_labels_tensor.to(device)
-
-    testAcc = accuracy(net,test_features_tensor,test_labels_tensor)
-    print(testAcc)
-
-    runTime = time.time() - startTime
-
-    #dataset.shape
-
-    #dataset = dataset.drop_duplicates(subset='text_cleaned')
-
-    # Reminder: Generate output file containing:
-    #           cleaning parameter, network structure, results (accuracy, minimal validation loss, epoch, runtime?)
-    f.write('{}, {}, {}, {}, {}, {}'.format(i, netType, testAcc, min_validation, min_val_epoch, runTime))
+        # Reminder: Generate output file containing:
+        #           cleaning parameter, network structure, results (accuracy, minimal validation loss, epoch, runtime?)
+        f.write('{}, {}, {}, {}, {}, {}\n'.format(i, netType, testAcc, min_validation, min_val_epoch, runTime))
 f.close()
