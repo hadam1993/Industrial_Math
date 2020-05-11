@@ -1,11 +1,14 @@
 - had problems with python installation on bridges (?)
 - switched to mortimer
 - steps to get python running on mortimer:
-	- followed steps described here: <find_url>
+	- UWM HPC: https://uwm.edu/hpc/
+	- followed steps described here: https://www.psc.edu/user-resources/software/anaconda
 	- created miniconda env using Miniconda3-latest-Linux-x86_64.sh(url) to have access to conda package manager
 	- installed torch, transformers, wordninja, pattern, nltk, scikit-learn, spacy, torchvision
 	- wrote sbatch script
-	- downloaded distilbert files because of memory constraints of jobs on gpu partition
+	- downloaded distilbert files because of memory constraints of jobs on gpu partition from url:
+		- model: https://s3.amazonaws.com/models.huggingface.co/bert/distilbert-base-uncased-pytorch_model.bin
+		- config: https://s3.amazonaws.com/models.huggingface.co/bert/distilbert-base-uncased-config.json
 	- load distilbert from local file
 	- modify ordered_dict keys in distilbert state_dict: remove prefix 'distilbert.'
 	- RUN!
