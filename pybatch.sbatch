@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #SBATCH --partition=gpu
-#SBATCH --mem=20000
+#SBATCH --mem=30000
 
 module load pkgsrc/2019Q1
 

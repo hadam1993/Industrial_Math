@@ -226,11 +226,11 @@ model.load_state_dict(state_dict)
 f = open('kaggle_results.csv', 'w+')
 f.write('Cleaning Index, Network Type, Test Accuracy, Min. Epoch, Min. Validation Loss, Runtime\n')
 
-netType = 'shallow'
+#netType = 'shallow'
 
 ### Loop over cleaning parameter and output quality values of run
 # import nltk
-for netType in ['shallow', 'medium']:
+for netType in [Shallow_Network, Medium_Network]:
     for i in range(8):
         startTime = time.time()
         # Import and prepare dataset
@@ -305,10 +305,7 @@ for netType in ['shallow', 'medium']:
 
 
         # Create neural network object
-        if netType == 'shallow':
-            net = Shallow_Network()
-        else:
-            net = Medium_Network()
+        net = netType()
         net = net.to(device)
 
         #Create an stochastic gradient descent optimizer
@@ -370,7 +367,7 @@ for netType in ['shallow', 'medium']:
         #min_val_epoch
 
         # Reload optially validated weights
-        net = Shallow_Network()
+        net = netType()
         checkpoint = torch.load('./net_parameters_kaggle.pth')
         net.load_state_dict(checkpoint)
         net = net.to(device)
@@ -405,5 +402,5 @@ for netType in ['shallow', 'medium']:
 
         # Reminder: Generate output file containing:
         #           cleaning parameter, network structure, results (accuracy, minimal validation loss, epoch, runtime?)
-        f.write('{}, {}, {}, {}, {}, {}\n'.format(i, netType, testAcc, min_validation, min_val_epoch, runTime))
+        f.write('{}, {}, {}, {}, {}, {}\n'.format(i, netType, testAcc, min_val_epoch, min_validation, runTime))
 f.close()
