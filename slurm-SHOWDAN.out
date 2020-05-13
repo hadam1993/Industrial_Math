@@ -1,0 +1,31 @@
+Downloading:   0%|          | 0.00/268M [00:00<?, ?B/s]Downloading:   0%|          | 52.2k/268M [00:00<11:43, 381kB/s]Downloading:   0%|          | 139k/268M [00:00<10:20, 431kB/s] Downloading:   0%|          | 226k/268M [00:00<09:22, 476kB/s]Downloading:   0%|          | 330k/268M [00:00<08:21, 533kB/s]Downloading:   0%|          | 418k/268M [00:00<07:57, 560kB/s]Downloading:   0%|          | 522k/268M [00:00<07:21, 606kB/s]Downloading:   0%|          | 627k/268M [00:00<06:55, 643kB/s]Downloading:   0%|          | 749k/268M [00:01<06:22, 699kB/s]Downloading:   0%|          | 870k/268M [00:01<05:58, 744kB/s]Downloading:   0%|          | 1.01M/268M [00:01<05:31, 806kB/s]Downloading:   0%|          | 1.15M/268M [00:01<05:12, 854kB/s]Downloading:   0%|          | 1.29M/268M [00:01<04:58, 895kB/s]Downloading:   1%|          | 1.44M/268M [00:01<04:39, 954kB/s]Downloading:   1%|          | 1.60M/268M [00:01<04:26, 1.00MB/s]Downloading:   1%|          | 1.76M/268M [00:02<04:17, 1.03MB/s]Downloading:   1%|          | 1.93M/268M [00:02<04:04, 1.09MB/s]Downloading:   1%|          | 2.09M/268M [00:02<03:58, 1.11MB/s]Downloading:   1%|          | 2.23M/268M [00:02<03:42, 1.19MB/s]Downloading:   1%|          | 2.37M/268M [00:02<03:34, 1.24MB/s]Downloading:   1%|          | 2.52M/268M [00:02<03:33, 1.24MB/s]Downloading:   1%|          | 2.68M/268M [00:02<03:20, 1.32MB/s]Downloading:   1%|          | 2.84M/268M [00:02<03:11, 1.38MB/s]Downloading:   1%|          | 2.99M/268M [00:03<03:16, 1.35MB/s]Downloading:   1%|          | 3.17M/268M [00:03<03:03, 1.44MB/s]Downloading:   1%|          | 3.34M/268M [00:03<02:54, 1.52MB/s]Downloading:   1%|▏         | 3.50M/268M [00:03<03:04, 1.44MB/s]Downloading:   1%|▏         | 3.69M/268M [00:03<02:50, 1.55MB/s]Downloading:   1%|▏         | 3.88M/268M [00:03<02:40, 1.64MB/s]Downloading:   2%|▏         | 4.06M/268M [00:03<02:49, 1.56MB/s]Downloading:   2%|▏         | 4.26M/268M [00:03<02:38, 1.66MB/s]Downloading:   2%|▏         | 4.46M/268M [00:03<02:42, 1.63MB/s]Downloading:   2%|▏         | 4.68M/268M [00:03<02:30, 1.75MB/s]Downloading:   2%|▏         | 4.89M/268M [00:04<02:32, 1.72MB/s]Downloading:   2%|▏         | 5.12M/268M [00:04<02:24, 1.82MB/s]Downloading:   2%|▏         | 5.34M/268M [00:04<02:24, 1.82MB/s]Downloading:   2%|▏         | 5.57M/268M [00:04<02:18, 1.90MB/s]Downloading:   2%|▏         | 5.81M/268M [00:04<02:17, 1.91MB/s]Downloading:   2%|▏         | 6.06M/268M [00:04<02:10, 2.01MB/s]Downloading:   2%|▏         | 6.28M/268M [00:04<02:14, 1.95MB/s]Downloading:   2%|▏         | 6.55M/268M [00:04<02:05, 2.08MB/s]Downloading:   3%|▎         | 6.81M/268M [00:05<02:05, 2.08MB/s]Downloading:   3%|▎         | 7.07M/268M [00:05<01:59, 2.18MB/s]Downloading:   3%|▎         | 7.33M/268M [00:05<02:01, 2.14MB/s]Downloading:   3%|▎         | 7.61M/268M [00:05<01:54, 2.27MB/s]Downloading:   3%|▎         | 7.87M/268M [00:05<01:57, 2.22MB/s]Downloading:   3%|▎         | 8.16M/268M [00:05<01:50, 2.36MB/s]Downloading:   3%|▎         | 8.43M/268M [00:05<01:54, 2.27MB/s]Downloading:   3%|▎         | 8.74M/268M [00:05<01:46, 2.44MB/s]Downloading:   3%|▎         | 9.02M/268M [00:05<01:49, 2.37MB/s]Downloading:   3%|▎         | 9.33M/268M [00:06<01:42, 2.52MB/s]Downloading:   4%|▎         | 9.61M/268M [00:06<01:46, 2.42MB/s]Downloading:   4%|▎         | 9.94M/268M [00:06<01:39, 2.59MB/s]Downloading:   4%|▍         | 10.2M/268M [00:06<01:42, 2.51MB/s]Traceback (most recent call last):
+  File "/home/sdomke/Data/sdomke/miniconda3/lib/python3.7/site-packages/transformers/file_utils.py", line 487, in get_from_cache
+    http_get(url, temp_file, proxies=proxies, resume_size=resume_size, user_agent=user_agent)
+  File "/home/sdomke/Data/sdomke/miniconda3/lib/python3.7/site-packages/transformers/file_utils.py", line 378, in http_get
+    temp_file.write(chunk)
+  File "/home/sdomke/Data/sdomke/miniconda3/lib/python3.7/tempfile.py", line 481, in func_wrapper
+    return func(*args, **kwargs)
+OSError: [Errno 122] Disk quota exceeded
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sdomke/Data/sdomke/miniconda3/lib/python3.7/site-packages/transformers/modeling_utils.py", line 486, in from_pretrained
+    local_files_only=local_files_only,
+  File "/home/sdomke/Data/sdomke/miniconda3/lib/python3.7/site-packages/transformers/file_utils.py", line 254, in cached_path
+    local_files_only=local_files_only,
+  File "/home/sdomke/Data/sdomke/miniconda3/lib/python3.7/site-packages/transformers/file_utils.py", line 487, in get_from_cache
+    http_get(url, temp_file, proxies=proxies, resume_size=resume_size, user_agent=user_agent)
+  File "/home/sdomke/Data/sdomke/miniconda3/lib/python3.7/tempfile.py", line 499, in __exit__
+    result = self.file.__exit__(exc, value, tb)
+OSError: [Errno 122] Disk quota exceeded
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "KaggleCompetition.py", line 210, in <module>
+    model = model_class.from_pretrained(pretrained_weights)
+  File "/home/sdomke/Data/sdomke/miniconda3/lib/python3.7/site-packages/transformers/modeling_utils.py", line 502, in from_pretrained
+    raise EnvironmentError(msg)
+OSError: Couldn't reach server at 'https://s3.amazonaws.com/models.huggingface.co/bert/distilbert-base-uncased-pytorch_model.bin' to download pretrained weights.
+Downloading:   4%|▍         | 10.5M/268M [00:06<02:49, 1.52MB/s]
